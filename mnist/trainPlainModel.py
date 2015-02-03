@@ -39,14 +39,14 @@ if pnet.parallel.main(__name__):
     
     print("Inside")
     layers = [
-        pnet.EdgeLayer(k=5, radius=1, spread='orthogonal', minimum_contrast=0.08),#
+        pnet.EdgeLayer(k=5, radius=1, spread='orthogonal', minimum_contrast=0.05),#
 
                 pnet.PartsLayer(numParts, (patchSize, patchSize), settings=dict(outer_frame=1,
                                                   em_seed=training_seed,
-                                                  threshold=40,
+                                                  threshold=20,
                                                   samples_per_image=100,
                                                   max_samples=1000000,
-                                                  min_prob=0.00005,
+                                                  min_prob=0.005,
                                                   )),
     ]
 
