@@ -48,6 +48,7 @@ if pnet.parallel.main(__name__):
                                                   max_samples=1000000,
                                                   min_prob=0.005,
                                                   )),
+                
     ]
 
     net = pnet.PartsNet(layers)
@@ -65,4 +66,46 @@ if pnet.parallel.main(__name__):
     print('Done.')
     end0 = time.time()
 
+    error_rates = []
+    test_ims, test_labels = ag.io.load_mnist('testing',return_labels=True)
+    for i in range(11):
+        
+        clnet = pnet.PartsNet([net] + [pnet.PoolingLayer(shape=(4,4),strides=(4,4)), pnet.SVMClassificationLayer(C=None)])
+        digits = range(10)
+        sup_ims = []
+        sup_labels = []
+        rs = np.random.RandomState(i)
+        for d in digits:
+            ims0 = ag.io.load_mnist('training',[d],return_labels=False)
+            #indices = [k for k in range(len(label)) if label[k] in [d]]
+            indices = np.arange(ims0.shape[0])
+            print(indices[:10])
+            rs.shuffle(indices)
+            print(indices[:10])
+            sup_ims.append(ims0[indices[:10]])
+            sup_labels.append(d * np.ones(10,dtype=np.int64))
+        sup_ims = np.concatenate(sup_ims, axis = 0)
+        sup_labels = np.concatenate(sup_labels, axis = 0)
+       
+        clnet.train(sup_ims, sup_labels)
+
+        corrects = 0
+        total = 0
+
+
+        ims_batches = np.array_split(test_ims, 100)
+        labels_batches = np.array_split(test_labels, 100)
+
+        def format_error_rate(pr):
+            return "{:.2f}%".format(100*(1-pr))
+
+        args = (tup+(clnet,) for tup in itr.izip(ims_batches, labels_batches))
+        for i, res in enumerate(pnet.parallel.starmap(test, args)):
+            corrects += res.sum()
+            total += res.size
+            pr = corrects / total
+
+        error_rate = 1.0 - pr
+        error_rates.append(error_rate)
+    print(error_rates)
     net.save(saveFile)

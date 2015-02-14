@@ -69,15 +69,17 @@ if pnet.parallel.main(__name__):
     error_rates = []
 
 
-    validationSet = data[-10000:0]
-    validationLabel = label[-10000:0]
+    validationSet = data[-10000:60000]
+    validationLabel = label[-10000:60000]
     
 
 
     for i in range(1,training_seed + 1):
         if classifier == 'mixture':
+            print('mixture')
             cl = pnet.MixtureClassificationLayer(n_components=numOfClassModel, min_prob=1e-5, block_size=200)
         elif classifier == 'svm':
+            print('svm')
             cl = pnet.SVMClassificationLayer(C=None)
 
         if poolingSize != 0:
@@ -85,17 +87,21 @@ if pnet.parallel.main(__name__):
         else:
             layers = [cl]
 
-        net = pnet.PartsNet.load(modelFileName + '%d.npy' %i)
+        net = pnet.PartsNet.load(modelFileName+'%d.npy' % i)
         clnet = pnet.PartsNet([net] + layers)
         
         digits = range(10)
         sup_ims = []
         sup_labels = []
+        rs = np.random.RandomState(i)
         for d in digits:
-            indices = [k for k in range(len(label)) if label[k] in [d]]
-            rs = np.random.RandomState(training_seed)
+            ims0 = ag.io.load_mnist('training',[d],return_labels=False)
+            #indices = [k for k in range(len(label)) if label[k] in [d]]
+            indices = np.arange(ims0.shape[0])
+            print(indices[:trainingSize])
             rs.shuffle(indices)
-            sup_ims.append(data[indices[:trainingSize]])
+            print(indices[:trainingSize])
+            sup_ims.append(ims0[indices[:trainingSize]])
             sup_labels.append(d * np.ones(trainingSize,dtype=np.int64))
         sup_ims = np.concatenate(sup_ims, axis = 0)
         sup_labels = np.concatenate(sup_labels, axis = 0)
@@ -110,13 +116,12 @@ if pnet.parallel.main(__name__):
         clnet.save(saveFileName + '%d.npy' %i)
 
 
-
-
         corrects = 0
         total = 0
         if testingType == 'testing':
             test_ims, test_labels = testingData, testingLabel
         elif testingType == 'validation':
+            print(test_ims.shape)
             test_ims = validationSet
             test_labels = validationLabel
 
@@ -129,10 +134,14 @@ if pnet.parallel.main(__name__):
 
         args = (tup+(clnet,) for tup in itr.izip(ims_batches, labels_batches))
         for i, res in enumerate(pnet.parallel.starmap(test, args)):
+            if i!=0 and i %20 ==0:
+                print("{0:05}/{1:05} Error rate: {2}".format(total, len(ims0),format_error_rate(pr)))
             corrects += res.sum()
             total += res.size
             pr = corrects / total
 
+        print("Final error rate:", format_error_rate(pr))
         error_rate = 1.0 - pr
         error_rates.append(error_rate)
     np.save(resultFile, error_rates)
+    print(error_rates)

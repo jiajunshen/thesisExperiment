@@ -27,7 +27,7 @@ if pnet.parallel.main(__name__):
     parser.add_argument('poolingShape', metavar = '<pooling patch size>', type=int, help='size of pooling')
     parser.add_argument('data',metavar='<mnist data file>',type=argparse.FileType('rb'), help='Filename of data file')
     parser.add_argument('saveFile', metavar='<part Model file>', type=argparse.FileType('wb'),help='Filename of savable model file')
-    parser.add_argument('saveWeightsFile', metavar='<pooling weights file>', type=argparse.FileType('wb'), help='Filename of weights file')
+    parser.add_argument('saveWeightsFile', metavar='<pooling weights file>', type=argparse.FileType('rb'), help='Filename of weights file')
     parser.add_argument('poolingDistance',metavar='<distance of pooling>', type=int,help='Distance of Pooling')
     parser.add_argument('seed', metavar='<training seed>', type=int, help='training seed')
 
@@ -50,7 +50,7 @@ if pnet.parallel.main(__name__):
     extensionlayers = [
         #pnet.ExtensionPartsLayer(num_parts = numParts, num_components = numExtensionParts, part_shape = (extensionPatchSize,extensionPatchSize), lowerLayerShape = (6,6))
         pnet.PoolingLayer(shape=(pooling_shape,pooling_shape),strides=(pooling_shape,pooling_shape)),
-        pnet.ExtensionPoolingLayer(n_parts = numParts * numExtensionParts, grouping_type='rbm', pooling_type='distance',pooling_distance=pooling_distance, save_weights_file = weightsSaveFile, weights_file = None, settings={})
+        pnet.ExtensionPoolingLayer(n_parts = numParts * numExtensionParts, grouping_type='rbm', pooling_type='distance',pooling_distance=pooling_distance, save_weights_file = None, weights_file = weightsSaveFile, settings={})
     ]
     clnet = pnet.PartsNet([net] + extensionlayers)
 
