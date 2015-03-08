@@ -31,7 +31,7 @@ if pnet.parallel.main(__name__):
     sup_labels = []
     net = None
     layers = [
-    pnet.OrientedPartsLayer(50,8,(6,6),settings=dict(outer_frame = 1,
+    pnet.OrientedPartsLayer(16,8,(6,6),settings=dict(outer_frame = 1,
                                 em_seed=training_seed,
                                 n_init = 2,
                                 threshold = 35,
@@ -51,9 +51,9 @@ if pnet.parallel.main(__name__):
         
         #pnet.PoolingLayer(shape=(4,4), strides=(4, 4)),
         #pnet.MixtureClassificationLayer(n_components=1, min_prob=0.0001,block_size=200),
-        pnet.ExtensionPartsLayer(num_parts = 400, num_components = 5, part_shape = (12,12),lowerLayerShape = (6,6)),
-        #pnet.ExtensionPoolingLayer(n_parts = 1000, grouping_type = 'rbm', pooling_type = 'distance', pooling_distance = 5, weights_file = None, save_weights_file = None, settings = {}) 
+        pnet.ExtensionPartsLayer(num_parts = 128, num_components = 5, part_shape = (12,12),lowerLayerShape = (6,6)),
         pnet.PoolingLayer(shape=(8,8), strides=(8, 8)),
+        pnet.ExtensionPoolingLayer(n_parts = 640, grouping_type = 'rbm', pooling_type = 'distance', pooling_distance = 5, weights_file = None, save_weights_file = None, settings = {}), 
         pnet.SVMClassificationLayer(C=None)
     ]
 
