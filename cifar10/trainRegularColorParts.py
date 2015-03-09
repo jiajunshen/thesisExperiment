@@ -16,6 +16,7 @@ def test(ims, labels, net):
 
 if pnet.parallel.main(__name__):
     parser = argparse.ArgumentParser()
+    parser.add_argument('numParts',metavar='<numPart param>',type = int, help='number of parts')
     parser.add_argument('model', metavar='<parts net file>', type=argparse.FileType('wb'), help='Filename of model file')
 
 
@@ -23,6 +24,8 @@ if pnet.parallel.main(__name__):
     parser.add_argument('--log', action='store_true')
     args = parser.parse_args()
     training_seed = args.training_seed
+    numParts = args.numParts
+
     if args.log:
         from pnet.vzlog import default as vz
     ag.set_verbose(True)
@@ -34,7 +37,7 @@ if pnet.parallel.main(__name__):
         #pnet.IntensityThresholdLayer(),
         
         pnet.ColorEdgeLayer(k=5, radius=1, spread='orthogonal', minimum_contrast=0.05),
-        pnet.PartsLayer(100, (6, 6), settings=dict(outer_frame=0,
+        pnet.PartsLayer(numParts, (6, 6), settings=dict(outer_frame=0,
                                                   threshold=35, 
                                                   samples_per_image=20, 
                                                   max_samples=1000000, 
@@ -45,8 +48,8 @@ if pnet.parallel.main(__name__):
         #pnet.MixtureClassificationLayer(n_components=1, min_prob=0.0001,block_size=200),
         #pnet.ExtensionPartsLayer(num_parts = 100, num_components = 10, part_shape = (12,12),lowerLayerShape = (6,6)),
         #pnet.ExtensionPoolingLayer(n_parts = 1000, grouping_type = 'rbm', pooling_type = 'distance', pooling_distance = 5, weights_file = None, save_weights_file = None, settings = {}) 
-        pnet.PoolingLayer(shape=(4,4), strides=(4, 4)),
-        pnet.SVMClassificationLayer(C=None)
+        #pnet.PoolingLayer(shape=(4,4), strides=(4, 4)),
+        #pnet.SVMClassificationLayer(C=None)
     ]
 
     net = pnet.PartsNet(layers)
@@ -54,7 +57,9 @@ if pnet.parallel.main(__name__):
     ims, label = ag.io.load_cifar10('training', selection = slice(0,10000))
 
     net.train(ims)
-    
+    net.save(saveFile)
+
+'''
     classes = range(10)
     classificationTraining = 5000
     rs = np.random.RandomState(training_seed)
@@ -76,4 +81,4 @@ if pnet.parallel.main(__name__):
 
 
     net.save(args.model)
-
+'''
